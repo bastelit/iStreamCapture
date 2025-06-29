@@ -1,4 +1,4 @@
-# 💡 iStreamCapture - Voice-to-Idea Innovation Tool  - Stream your thoughts, capture brilliance
+# 💡 iStreamCapture - Voice-to-Idea Innovation Tool
 
 > *Stream your ideas. Capture innovation. Fuel your future.*
 
