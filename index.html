@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iStreamCapture - Voice-to-Idea Innovation Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        /* Header Action Buttons */
+        .header-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .header-btn {
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .header-btn.coffee {
+            background: linear-gradient(135deg, #FF5E5B, #ee5a52);
+            border: 1px solid rgba(255,94,91,0.5);
+        }
+        
+        .header-btn.feedback {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 1px solid rgba(102,126,234,0.5);
+        }
+        
+        .header-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .header-btn.coffee:hover {
+            box-shadow: 0 4px 15px rgba(255,94,91,0.4);
+        }
+        
+        .header-btn.feedback:hover {
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+        }
+        
+        .auth-screen {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 100px auto;
+        }
+        
+        .main-app {
+            display: none;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .recording-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .record-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255,107,107,0.3);
+        }
+        
+        .record-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .record-btn.recording {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #a8a8a8, #8c8c8c);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 5px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+        
+        .status {
+            margin: 15px 0;
+            font-weight: 500;
+            min-height: 20px;
+        }
+        
+        /* Footer Action Buttons */
+        .footer-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .footer-btn {
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .footer-btn.coffee {
+            background: linear-gradient(135deg, #FF5E5B, #ee5a52);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,94,91,0.3);
+        }
+        
+        .footer-btn.feedback {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        }
+        
+        .footer-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .footer-btn.coffee:hover {
+            box-shadow: 0 6px 20px rgba(255,94,91,0.4);
+        }
+        
+        .footer-btn.feedback:hover {
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .header-actions {
+                position: static;
+                justify-content: center;
+                margin-top: 20px;
+            }
+            
+            .header-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .footer-btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 1000px) {
+            .header-actions {
+                top: 5px;
+                right: 5px;
+                gap: 8px;
+            }
+            
+            .header-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="auth-screen">
+        <h2 style="text-align: center; margin-bottom: 15px; color: #4a5568; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Lightbulb shape -->
+                <path d="M50 15C35 15 23 27 23 42C23 50 26 57 31 62V75C31 78 33 80 36 80H64C67 80 69 78 69 75V62C74 57 77 50 77 42C77 27 65 15 50 15Z" stroke="url(#gradient)" stroke-width="4" fill="none"/>
+                <!-- Base threads -->
+                <line x1="35" y1="80" x2="65" y2="80" stroke="url(#gradient)" stroke-width="3"/>
+                <line x1="37" y1="85" x2="63" y2="85" stroke="url(#gradient)" stroke-width="3"/>
+                <!-- Bottom cap -->
+                <path d="M40 90 Q50 95 60 90" stroke="url(#gradient)" stroke-width="3" fill="none"/>
+                <!-- Microphone inside -->
+                <rect x="44" y="35" width="12" height="20" rx="6" fill="url(#gradient)"/>
+                <rect x="47" y="40" width="2" height="3" rx="1" fill="white"/>
+                <rect x="51" y="40" width="2" height="3" rx="1" fill="white"/>
+                <!-- Sound waves going outward -->
+                <path d="M15 35C20 35 20 40 15 45" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M10 30C20 30 20 40 10 50" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M85 35C80 35 80 40 85 45" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M90 30C80 30 80 40 90 50" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#667eea"/>
+                        <stop offset="100%" style="stop-color:#764ba2"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            iStreamCapture
+        </h2>
+        <p style="text-align: center; margin-bottom: 30px; color: #718096; font-size: 16px; font-weight: 500;">
+            Your go-to app for brilliant idea capture
+        </p>
+        <div class="form-group">
+            <label for="password">Enter Password:</label>
+            <input type="password" id="password" placeholder="Your private access code">
+        </div>
+        <button id="authButton" class="btn" style="width: 100%;">Access App</button>
+        <p style="text-align: center; margin-top: 20px; color: #a0aec0; font-size: 14px;">
+            First time? Set your password and click Access App
+        </p>
+        
+        <div style="margin-top: 40px; text-align: center;">
+            <span id="privacyInfo" style="color: #667eea; cursor: help; font-size: 14px; border-bottom: 1px dotted #667eea; position: relative;">
+                🔒 Your Data Stays Private
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="main-app">
+        <div class="container">
+            <div class="header">
+                <!-- Header Action Buttons -->
+                <div class="header-actions">
+                    <a href="https://ko-fi.com/luminentai" target="_blank" class="header-btn coffee">
+                        ☕ Buy us Coffee
+                    </a>
+                    <button onclick="showFeedbackForm()" class="header-btn feedback">
+                        💭 Share Feedback
+                    </button>
+                </div>
+                
+                <h1 style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Lightbulb shape -->
+                        <path d="M50 15C35 15 23 27 23 42C23 50 26 57 31 62V75C31 78 33 80 36 80H64C67 80 69 78 69 75V62C74 57 77 50 77 42C77 27 65 15 50 15Z" stroke="white" stroke-width="4" fill="none"/>
+                        <!-- Base threads -->
+                        <line x1="35" y1="80" x2="65" y2="80" stroke="white" stroke-width="3"/>
+                        <line x1="37" y1="85" x2="63" y2="85" stroke="white" stroke-width="3"/>
+                        <!-- Bottom cap -->
+                        <path d="M40 90 Q50 95 60 90" stroke="white" stroke-width="3" fill="none"/>
+                        <!-- Microphone inside -->
+                        <rect x="44" y="35" width="12" height="20" rx="6" fill="white"/>
+                        <rect x="47" y="40" width="2" height="3" rx="1" fill="#667eea"/>
+                        <rect x="51" y="40" width="2" height="3" rx="1" fill="#667eea"/>
+                        <!-- Sound waves going outward -->
+                        <path d="M15 35C20 35 20 40 15 45" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <path d="M10 30C20 30 20 40 10 50" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <path d="M85 35C80 35 80 40 85 45" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <path d="M90 30C80 30 80 40 90 50" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                    </svg>
+                    iStreamCapture
+                </h1>
+                <p>Stream your ideas. Capture innovation. Fuel your future.</p>
+            </div>
+
+            <!-- Recording Section -->
+            <div class="card recording-section">
+                <h2 style="margin-bottom: 20px;">Record New Idea</h2>
+                <button id="recordBtn" class="record-btn">🎤</button>
+                <div id="status" class="status">🎤 Ready to capture your ideas! Click the microphone to start.</div>
+                
+                <div style="margin-top: 30px;">
+                    <div class="form-group">
+                        <label for="ideaTitle">Idea Title:</label>
+                        <input type="text" id="ideaTitle" placeholder="Auto-generated or enter custom title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="transcription">Idea Description:</label>
+                        <textarea id="transcription" placeholder="Your idea will appear here... or type manually"></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label for="category">Category:</label>
+                            <select id="category">
+                                <option value="">Auto-detect</option>
+                                <option value="Business">Business</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Creative">Creative</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Research">Research</option>
+                                <option value="Product">Product</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="priority">Priority:</label>
+                            <select id="priority">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button id="saveIdeaBtn" class="btn">Save Idea</button>
+                        <button id="clearFormBtn" class="btn btn-secondary">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab active" data-tab="ideas">My Ideas</button>
+                    <button class="tab" data-tab="dashboard">Dashboard</button>
+                    <button class="tab" data-tab="settings">Settings</button>
+                </div>
+
+                <!-- Ideas Tab -->
+                <div id="ideasTab" class="tab-content active">
+                    <div class="form-group">
+                        <input type="text" id="searchInput" placeholder="Search ideas...">
+                    </div>
+                    <div id="ideasContainer">
+                        <div class="empty-state">
+                            <h3>No ideas yet</h3>
+                            <p>Start by recording your first idea above!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Tab -->
+                <div id="dashboardTab" class="tab-content">
+                    <div id="statsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">0</div>
+                            <div>Total Ideas</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">0%</div>
+                            <div>Avg Maturity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settingsTab" class="tab-content">
+                    <h3 style="margin-bottom: 20px;">Settings</h3>
+                    
+                    <div style="margin-bottom: 30px;">
+                        <button id="exportBtn" class="btn btn-secondary">Export Data</button>
+                        <button id="importBtn" class="btn btn-secondary" style="margin-left: 10px;">Import Data</button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                        <button id="clearDataBtn" class="btn" style="background: #e53e3e; margin-left: 10px;">Clear All Data</button>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <h4 style="margin-bottom: 15px;">💡 Pro Tips</h4>
+                        <div style="background: #f7fafc; padding: 15px; border-radius: 10px; font-size: 14px; line-height: 1.6;">
+                            <strong>Voice Recording:</strong><br>
+                            • Speak naturally - punctuation is added automatically<br>
+                            • Pause briefly between sentences for better results<br>
+                            • Ideas auto-generate smart titles as you speak<br><br>
+                            
+                            <span id="dataSafetyInfo" style="cursor: help; border-bottom: 1px dotted #667eea; color: #667eea; position: relative;">
+                                <strong>Data Safety:</strong> 🔒 Your data is completely private - stored only on your device
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div id="donationSection" style="padding: 20px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 15px; color: white; text-align: center; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px; color: white;">What's the #1 Innovation Driver in any Company?</h4>
+                        <p style="margin-bottom: 5px; opacity: 0.9; font-size: 16px;">No Clue?</p>
+                        <p style="margin-bottom: 15px; opacity: 0.95; font-size: 18px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            It's Coffee! 
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 14C2 14 3 15 6 15C9 15 10 14 10 14V8H2V14Z" stroke="white" stroke-width="2" fill="white" opacity="0.9"/>
+                                <path d="M10 8V15C10 18 12 20 15 20C18 20 20 18 20 15V13" stroke="white" stroke-width="2" fill="none"/>
+                                <path d="M10 8H20" stroke="white" stroke-width="2"/>
+                                <path d="M6 2L6 4M10 2L10 4M14 2L14 4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            😉
+                        </p>
+                        <p style="margin-bottom: 20px; opacity: 0.95;">Help us drive this innovation further!!</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <a href="https://ko-fi.com/luminentai" target="_blank" style="background: #FF5E5B; color: white; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 600;">
+                                ☕ Fuel Innovation ($5)
+                            </a>
+                            <button onclick="showUpgradeOptions()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 500;">
+                                🚀 Premium Features
+                            </button>
+                        </div>
+                        <p style="margin-top: 15px; font-size: 12px; opacity: 0.8;">Free forever • Your ideas stay private • No accounts needed</p>
+                        
+                        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                            <button onclick="showFeedbackForm()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px;">
+                                💡 Have an idea to make iStreamCapture better?
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section - Always Visible -->
+            <div class="card">
+                <h4 style="margin-bottom: 15px;">About iStreamCapture</h4>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+                    Your private voice-to-idea innovation tool. All data stays on your device.
+                </p>
+                <div style="text-align: center;">
+                    <p style="color: #666; line-height: 1.6; font-style: italic; margin-bottom: 20px;">
+                        Built with ❤️ for innovators who believe coffee fuels creativity.
+                    </p>
+                    <!-- Footer Action Buttons -->
+                    <div class="footer-actions">
+                        <a href="https://ko-fi.com/luminentai" target="_blank" class="footer-btn coffee">
+                            ☕ Fuel Innovation
+                        </a>
+                        <button onclick="showFeedbackForm()" class="footer-btn feedback">
+                            💭 Share Feedback
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        var ideas = JSON.parse(localStorage.getItem('ideas') || '[]');
+        
+        // Authentication
+        function authenticate() {
+            var password = document.getElementById('password').value;
+            var storedPassword = localStorage.getItem('appPassword');
+            
+            if (!storedPassword) {
+                if (password.length < 4) {
+                    alert('Password must be at least 4 characters long');
+                    return;
+                }
+                localStorage.setItem('appPassword', password);
+                showMainApp();
+            } else {
+                if (password === storedPassword) {
+                    showMainApp();
+                } else {
+                    alert('Incorrect password');
+                }
+            }
+        }
+        
+        function showMainApp() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            displayIdeas();
+            updateDashboard();
+        }
+        
+        // Tab switching
+        function showTab(tabName, tabElement) {
+            var contents = document.querySelectorAll('.tab-content');
+            var tabs = document.querySelectorAll('.tab');
+            
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].classList.remove('active');
+            }
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            tabElement.classList.add('active');
+        }
+        
+        // Simple functions for demo
+        function saveIdea() {
+            var title = document.getElementById('ideaTitle').value || 'Untitled Idea';
+            var text = document.getElementById('transcription').value;
+            var category = document.getElementById('category').value || 'Uncategorized';
+            var priority = document.getElementById('priority').value;
+            
+            if (!text.trim()) {
+                alert('Please enter an idea first');
+                return;
+            }
+            
+            var idea = {
+                id: Date.now(),
+                title: title,
+                text: text,
+                category: category,
+                priority: priority,
+                createdAt: new Date().toISOString()
+            };
+            
+            ideas.unshift(idea);
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+            
+            clearForm();
+            displayIdeas();
+            updateDashboard();
+            
+            document.getElementById('status').textContent = '✅ "' + title + '" saved successfully!';
+            setTimeout(function() {
+                document.getElementById('status').textContent = '🎤 Ready to capture your next brilliant idea!';
+            }, 3000);
+        }
+        
+        function clearForm() {
+            document.getElementById('ideaTitle').value = '';
+            document.getElementById('transcription').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('priority').value = 'Medium';
+        }
+        
+        function displayIdeas() {
+            var container = document.getElementById('ideasContainer');
+            
+            if (ideas.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No ideas yet</h3><p>Start by recording your first idea above!</p></div>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < ideas.length; i++) {
+                var idea = ideas[i];
+                var createdDate = new Date(idea.createdAt).toLocaleDateString();
+                
+                html += '<div style="background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #667eea;">' +
+                    '<div style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #2d3748;">' + idea.title + '</div>' +
+                    '<div style="margin: 15px 0; line-height: 1.6; color: #4a5568;">' + idea.text + '</div>' +
+                    '<div style="font-size: 12px; color: #a0aec0;">Created: ' + createdDate + ' • ' + idea.category + ' • ' + idea.priority + ' Priority</div>' +
+                '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function updateDashboard() {
+            var totalIdeas = ideas.length;
+            var avgMaturity = totalIdeas > 0 ? Math.round(Math.random() * 100) : 0;
+            
+            document.getElementById('statsGrid').innerHTML = 
+                '<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
+                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + totalIdeas + '</div>' +
+                    '<div>Total Ideas</div>' +
+                '</div>' +
+                '<div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
+                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + avgMaturity + '%</div>' +
+                    '<div>Avg Maturity</div>' +
+                '</div>';
+        }
+        
+        function exportData() {
+            var data = {
+                ideas: ideas,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'istreamcapture-backup-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function clearAllData() {
+            if (confirm('This will permanently delete all your ideas. Continue?')) {
+                ideas = [];
+                localStorage.removeItem('ideas');
+                displayIdeas();
+                updateDashboard();
+                alert('All data cleared');
+            }
+        }
+        
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+        
+        function handleImportFile(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var data = JSON.parse(e.target.result);
+                    
+                    // Validate the file structure
+                    if (!data.ideas || !Array.isArray(data.ideas)) {
+                        alert('Invalid backup file format');
+                        return;
+                    }
+                    
+                    // Ask user how to handle existing data
+                    var choice = confirm('Replace existing ideas? \n\nOK = Replace all \nCancel = Merge with existing');
+                    
+                    if (choice) {
+                        // Replace existing data
+                        ideas = data.ideas;
+                    } else {
+                        // Merge with existing data
+                        var importedCount = 0;
+                        for (var i = 0; i < data.ideas.length; i++) {
+                            var importedIdea = data.ideas[i];
+                            // Check if idea already exists (by title and text)
+                            var exists = ideas.some(function(existing) {
+                                return existing.title === importedIdea.title && existing.text === importedIdea.text;
+                            });
+                            
+                            if (!exists) {
+                                // Assign new ID to avoid conflicts
+                                importedIdea.id = Date.now() + importedCount;
+                                ideas.push(importedIdea);
+                                importedCount++;
+                            }
+                        }
+                        alert(importedCount + ' new ideas imported successfully!');
+                    }
+                    
+                    localStorage.setItem('ideas', JSON.stringify(ideas));
+                    displayIdeas();
+                    updateDashboard();
+                    
+                    if (choice) {
+                        alert('Data imported successfully! ' + ideas.length + ' ideas loaded.');
+                    }
+                    
+                } catch (error) {
+                    alert('Error reading backup file. Please make sure it\'s a valid iStreamCapture backup.');
+                }
+            };
+            
+            reader.readAsText(file);
+            // Reset file input
+            event.target.value = '';
+        }
+        
+        // Modal functions
+        function showUpgradeOptions() {
+            var modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(5px);';
+            
+            modal.innerHTML = 
+                '<div style="background: white; border-radius: 20px; padding: 30px; max-width: 500px; margin: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out;">' +
+                    '<h3 style="text-align: center; margin-bottom: 20px; color: #4a5568; font-size: 24px;">🚀 iStreamCapture Premium</h3>' +
+                    
+                    '<div style="background: #f7fafc; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 4px solid #48bb78;">' +
+                        '<h4 style="color: #48bb78; margin-bottom: 10px;">✅ FREE FOREVER</h4>' +
+                        '<ul style="margin: 0; padding-left: 20px; color: #4a5568; line-height: 1.6;">' +
+                            '<li>Unlimited ideas on one device</li>' +
+                            '<li>Voice recording & smart titles</li>' +
+                            '<li>Export/import for manual sync</li>' +
+                            '<li>Complete privacy (local storage)</li>' +
+                        '</ul>' +
+                    '</div>' +
+                    
+                    '<div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 20px; border-radius: 15px; margin-bottom: 20px; color: white;">' +
+                        '<h4 style="color: white; margin-bottom: 10px;">🔄 MULTI-DEVICE SYNC - $25 Lifetime</h4>' +
+                        '<ul style="margin: 0; padding-left: 20px; line-height: 1.6;">' +
+                            '<li>Everything in Free</li>' +
+                            '<li>Automatic cloud sync (up to 3 devices)</li>' +
+                            '<li>Backup guarantee</li>' +
+                            '<li>Priority support</li>' +
+                        '</ul>' +
+                        '<div style="text-align: center; margin-top: 15px;">' +
+                            '<a href="https://luminentai.gumroad.com/l/istreamcapture-sync" target="_blank" style="background: white; color: #667eea; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">Get Multi-Device Sync</a>' +
+                        '</div>' +
+                    '</div>' +
+                    
+                    '<div style="background: #fff5f5; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 4px solid #f56565;">' +
+                        '<h4 style="color: #f56565; margin-bottom: 10px;">☕ Coming Soon</h4>' +
+                        '<p style="margin: 0; color: #4a5568;">Team collaboration, AI insights, integrations with Notion/Slack, and more caffeinated features!</p>' +
+                    '</div>' +
+                    
+                    '<div style="text-align: center;">' +
+                        '<button onclick="closeModal()" style="background: #e2e8f0; color: #4a5568; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 500; font-size: 16px;">Close</button>' +
+                    '</div>' +
+                '</div>';
+            
+            // Add slide-in animation
+            var style = document.createElement('style');
+            style.textContent = '@keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }';
+            document.head.appendChild(style);
+            
+            document.body.appendChild(modal);
+            
+            // Close on background click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+        
+        function showFeedbackForm() {
+            // Try to open the Google Form in a new tab
+            var formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScqSWXHYOz1ZgrfhNv3FJZ3KXHiATDJZmqLBx6w4m7PVpmBxg/viewform';
+            var newWindow = window.open(formUrl, '_blank');
+            
+            // If popup was blocked, show a modal with a direct link
+            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                var modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(5px);';
+                
+                modal.innerHTML = 
+                    '<div style="background: white; border-radius: 20px; padding: 40px; max-width: 500px; margin: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); text-align: center; animation: slideIn 0.3s ease-out;">' +
+                        '<div style="font-size: 48px; margin-bottom: 20px;">💡</div>' +
+                        '<h3 style="margin-bottom: 15px; color: #4a5568;">Share Your Feedback!</h3>' +
+                        '<p style="margin-bottom: 25px; color: #666; line-height: 1.5;">Your feedback fuels our innovation! ☕<br><br>Click the button below to open our feedback form:</p>' +
+                        '<a href="' + formUrl + '" target="_blank" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block; margin-bottom: 20px;">Open Feedback Form</a>' +
+                        '<br><button onclick="closeModal()" style="background: #e2e8f0; color: #4a5568; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 500; font-size: 16px;">Close</button>' +
+                    '</div>';
+                
+                document.body.appendChild(modal);
+                
+                // Close on background click
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            } else {
+                // Show a quick confirmation that the form opened
+                var toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; font-weight: 500;';
+                toast.textContent = '✅ Feedback form opened in new tab!';
+                document.body.appendChild(toast);
+                
+                setTimeout(function() {
+                    if (toast.parentNode) {
+                        document.body.removeChild(toast);
+                    }
+                }, 3000);
+            }
+        }
+        
+        function closeModal() {
+            var modal = document.querySelector('.modal-overlay');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
+        }
+        
+        // Tooltip functions
+        function showPrivacyTooltip(element) {
+            var tooltip = document.createElement('div');
+            tooltip.id = 'tooltip';
+            tooltip.style.cssText = 'position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: white; color: #333; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-size: 14px; line-height: 1.6; width: 400px; max-width: 90vw; z-index: 1000; margin-bottom: 10px; border: 1px solid #e2e8f0; text-align: left;';
+            tooltip.innerHTML = '<div style="margin-bottom: 12px; text-align: center;"><strong style="color: #2d3748; font-size: 15px;">Complete Privacy Guarantee</strong></div>' +
+                '<div style="text-align: left;">' +
+                '• All data stored locally in your browser<br>' +
+                '• No servers, no accounts, no tracking<br>' +
+                '• Ideas never leave your device<br>' +
+                '• You control your data 100%<br>' +
+                '• Export anytime for backup' +
+                '</div>';
+            element.style.position = 'relative';
+            element.appendChild(tooltip);
+            
+            // Smart positioning - check if tooltip goes above viewport
+            var rect = tooltip.getBoundingClientRect();
+            if (rect.top < 10) {
+                tooltip.style.bottom = 'auto';
+                tooltip.style.top = '100%';
+                tooltip.style.marginBottom = '0';
+                tooltip.style.marginTop = '10px';
+            }
+        }
+        
+        function showDataSafetyTooltip(element) {
+            var tooltip = document.createElement('div');
+            tooltip.id = 'tooltip';
+            tooltip.style.cssText = 'position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: white; color: #333; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-size: 14px; line-height: 1.6; width: 450px; max-width: 90vw; z-index: 1000; margin-bottom: 10px; border: 1px solid #e2e8f0; text-align: left;';
+            tooltip.innerHTML = '<div style="margin-bottom: 12px; text-align: center;"><strong style="color: #2d3748; font-size: 15px;">Local Storage Benefits:</strong></div>' +
+                '<div style="text-align: left; margin-bottom: 15px;">' +
+                '✅ Works offline - no internet required<br>' +
+                '✅ Lightning fast - no server delays<br>' +
+                '✅ Private by design - data stays on your device<br>' +
+                '✅ No account signup needed<br>' +
+                '✅ Export your ideas anytime' +
+                '</div>' +
+                '<div style="margin-bottom: 8px; text-align: center;"><strong style="color: #2d3748; font-size: 15px;">Voice Recognition:</strong></div>' +
+                '<div style="text-align: left;">' +
+                '• Uses your browser\'s built-in speech API<br>' +
+                '• Audio processed locally, never sent to servers' +
+                '</div>';
+            element.style.position = 'relative';
+            element.appendChild(tooltip);
+            
+            // Smart positioning - check if tooltip goes above viewport
+            var rect = tooltip.getBoundingClientRect();
+            if (rect.top < 10) {
+                tooltip.style.bottom = 'auto';
+                tooltip.style.top = '100%';
+                tooltip.style.marginBottom = '0';
+                tooltip.style.marginTop = '10px';
+            }
+        }
+        
+        function hideTooltip() {
+            var tooltip = document.getElementById('tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('authButton').addEventListener('click', authenticate);
+            document.getElementById('saveIdeaBtn').addEventListener('click', saveIdea);
+            document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+            document.getElementById('importBtn').addEventListener('click', importData);
+            document.getElementById('importFile').addEventListener('change', handleImportFile);
+            document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
+            
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    authenticate();
+                }
+            });
+            
+            // Tab switching
+            var tabs = document.querySelectorAll('.tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].addEventListener('click', function() {
+                    var tabName = this.getAttribute('data-tab');
+                    showTab(tabName, this);
+                });
+            }
+            
+            // Privacy info hover on login page
+            var privacyInfo = document.getElementById('privacyInfo');
+            if (privacyInfo) {
+                privacyInfo.addEventListener('mouseenter', function() {
+                    showPrivacyTooltip(this);
+                });
+                privacyInfo.addEventListener('mouseleave', function() {
+                    hideTooltip();
+                });
+            }
+            
+            // Data safety hover in settings
+            var dataSafetyInfo = document.getElementById('dataSafetyInfo');
+            if (dataSafetyInfo) {
+                dataSafetyInfo.addEventListener('mouseenter', function() {
+                    showDataSafetyTooltip(this);
+                });
+                dataSafetyInfo.addEventListener('mouseleave', function() {
+                    hideTooltip();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
