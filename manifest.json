@@ -1,0 +1,64 @@
+{
+  "name": "iStreamCapture - Voice-to-Idea Innovation Tool",
+  "short_name": "iStreamCapture",
+  "description": "Privacy-first voice-to-idea capture tool for innovators and entrepreneurs. Stream your ideas, capture innovation, fuel your future.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "business", "utilities"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "features": [
+    "Voice-to-text transcription",
+    "Offline capability",
+    "Local data storage",
+    "Export/Import functionality",
+    "Password protection"
+  ],
+  "shortcuts": [
+    {
+      "name": "Record New Idea",
+      "short_name": "Record",
+      "description": "Quickly record a new idea",
+      "url": "/?action=record",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr"
+}

@@ -81,10 +81,24 @@
 - **Ideas auto-generate smart titles** as you speak
 
 ### **4. Managing Ideas**
-- **Search**: Find ideas by keyword
+- **Search**: Real-time search as you type - searches titles, descriptions, categories, and priorities
+- **Edit**: Click the Edit button on any idea to modify it
+- **Delete**: Remove ideas with confirmation dialog
 - **Categories**: Auto-detected or manual
 - **Priority**: High, Medium, Low
 - **Export**: Download backup anytime
+
+### **5. Voice Commands**
+While recording, you can use these voice commands:
+- **"Save"** or **"Save idea"** - Automatically saves your current idea
+- **"Clear"** or **"Clear form"** - Clears the form fields
+- **"Stop"** or **"Stop recording"** - Stops the recording session
+
+### **6. PWA Installation**
+Install iStreamCapture as a native app:
+- **Desktop**: Look for the install icon in your browser's address bar
+- **Mobile**: Use "Add to Home Screen" option
+- **Benefits**: Faster loading, offline access, feels like a native app
 
 ---
 
@@ -109,21 +123,28 @@
 
 ### **Core Features**
 - 🎤 **Voice-to-text transcription**
+- 🎙️ **Voice commands** - Say "save", "clear", or "stop" during recording
+- ✏️ **Edit & delete ideas** - Full CRUD functionality
+- 🔍 **Real-time search & filter** - Find ideas instantly
 - 🏷️ **Smart auto-categorization**
-- 📱 **Works on all devices**
-- 🔒 **Password protection**
-- 💾 **Local data storage**
+- 📱 **Progressive Web App (PWA)** - Install as native app
+- 🔒 **Secure password hashing** - SHA-256 encryption
+- 💾 **Local data storage** - Complete privacy
 - 📤 **Export/import capabilities**
+- 📊 **Analytics dashboard** - Track your productivity
 
 ### **Categories**
 - Business, Technology, Creative
 - Personal, Research, Product
 - Custom categories (coming soon)
 
-### **Dashboard**
+### **Enhanced Dashboard**
 - Total ideas captured
-- Category distribution
-- Idea maturity tracking
+- Ideas created this week
+- Average idea length
+- Top category by usage
+- Total ideas created (lifetime)
+- Voice commands used
 
 ---
 
@@ -225,6 +246,85 @@
 - Team collaboration
 - AI-powered insights
 - Integration with Notion, Slack
+
+---
+
+## 🧪 Testing
+
+We've included a comprehensive test suite to ensure reliability:
+
+### **Running Tests**
+1. Open `tests.html` in your browser
+2. Click "Run All Tests" button
+3. View results for:
+   - Authentication tests (password hashing)
+   - Idea management (CRUD operations)
+   - Search & filter functionality
+   - Analytics tracking
+   - Import/export validation
+
+### **Test Coverage**
+- ✅ Password hashing with SHA-256
+- ✅ LocalStorage operations
+- ✅ Idea creation and deletion
+- ✅ Search functionality
+- ✅ Category and priority filtering
+- ✅ Analytics tracking
+- ✅ Export/import data validation
+
+---
+
+## 📹 Video Documentation
+
+For video content creators and users who prefer video tutorials:
+
+### **Available Resources**
+- `VIDEO_DOCUMENTATION_GUIDE.md` - Complete guide for creating video tutorials
+- Includes script templates, recording tips, and publishing guidelines
+- SEO optimization strategies
+- Equipment recommendations
+
+### **Suggested Videos**
+- Quick Start Guide (2-3 minutes)
+- Voice Recording & Commands (5-7 minutes)
+- Idea Management Deep-Dive (5-7 minutes)
+- Analytics Dashboard Explained (3-5 minutes)
+- Mobile Installation Guides
+
+---
+
+## 📁 Repository Structure
+
+```
+iStreamCapture/
+├── index.html                    # Main application (single-file app)
+├── manifest.json                 # PWA configuration
+├── tests.html                    # Test suite
+├── VIDEO_DOCUMENTATION_GUIDE.md  # Video creation guide
+├── README.md                     # This file
+└── LICENSE                       # MIT License
+```
+
+---
+
+## 🔄 Recent Updates
+
+### **Version 2.0** - Latest
+- ✅ Edit and delete functionality for ideas
+- ✅ Secure password hashing (SHA-256)
+- ✅ Real-time search and filter
+- ✅ Voice commands ("save", "clear", "stop")
+- ✅ Enhanced analytics dashboard
+- ✅ PWA support (Progressive Web App)
+- ✅ Comprehensive test suite
+- ✅ Toast notifications for actions
+- ✅ Improved mobile experience
+
+### **Version 1.0** - Initial Release
+- Voice-to-text transcription
+- Basic idea management
+- Local storage
+- Export/import functionality
 
 ---
 
