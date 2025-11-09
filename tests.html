@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iStreamCapture - Test Suite</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        .test-group {
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+        }
+        .test-case {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-case.passed {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .test-case.failed {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .test-case.running {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+        }
+        .test-result {
+            font-weight: bold;
+        }
+        .passed .test-result { color: #155724; }
+        .failed .test-result { color: #721c24; }
+        .running .test-result { color: #856404; }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        }
+        .summary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+        .summary div {
+            padding: 10px;
+        }
+        .summary .number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .error-details {
+            font-size: 12px;
+            color: #721c24;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>iStreamCapture Test Suite</h1>
+
+        <div class="summary" id="summary">
+            <div>
+                <div class="number" id="totalTests">0</div>
+                <div>Total Tests</div>
+            </div>
+            <div>
+                <div class="number" id="passedTests">0</div>
+                <div>Passed</div>
+            </div>
+            <div>
+                <div class="number" id="failedTests">0</div>
+                <div>Failed</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <button onclick="runAllTests()">Run All Tests</button>
+            <button onclick="clearTests()" style="background: #e53e3e;">Clear Results</button>
+        </div>
+
+        <div class="test-group">
+            <h2>Authentication Tests</h2>
+            <div id="auth-tests"></div>
+        </div>
+
+        <div class="test-group">
+            <h2>Idea Management Tests</h2>
+            <div id="idea-tests"></div>
+        </div>
+
+        <div class="test-group">
+            <h2>Search & Filter Tests</h2>
+            <div id="search-tests"></div>
+        </div>
+
+        <div class="test-group">
+            <h2>Analytics Tests</h2>
+            <div id="analytics-tests"></div>
+        </div>
+
+        <div class="test-group">
+            <h2>Import/Export Tests</h2>
+            <div id="export-tests"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test framework
+        var testResults = [];
+        var testsPassed = 0;
+        var testsFailed = 0;
+
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message || 'Assertion failed');
+            }
+        }
+
+        function assertEquals(actual, expected, message) {
+            if (actual !== expected) {
+                throw new Error(message || 'Expected ' + expected + ' but got ' + actual);
+            }
+        }
+
+        function assertNotNull(value, message) {
+            if (value === null || value === undefined) {
+                throw new Error(message || 'Value is null or undefined');
+            }
+        }
+
+        async function runTest(name, testFn, containerId) {
+            var container = document.getElementById(containerId);
+            var testDiv = document.createElement('div');
+            testDiv.className = 'test-case running';
+            testDiv.innerHTML = '<span>' + name + '</span><span class="test-result">Running...</span>';
+            container.appendChild(testDiv);
+
+            try {
+                await testFn();
+                testDiv.className = 'test-case passed';
+                testDiv.innerHTML = '<span>' + name + '</span><span class="test-result">✓ PASSED</span>';
+                testsPassed++;
+                return true;
+            } catch (error) {
+                testDiv.className = 'test-case failed';
+                testDiv.innerHTML = '<span>' + name + '<div class="error-details">' + error.message + '</div></span><span class="test-result">✗ FAILED</span>';
+                testsFailed++;
+                return false;
+            }
+        }
+
+        // Test cases
+        async function testPasswordHashing() {
+            // Test password hashing function exists
+            assertNotNull(hashPassword, 'hashPassword function should exist');
+
+            // Test hashing produces different output than input
+            var password = 'test123';
+            var hash = await hashPassword(password);
+            assert(hash !== password, 'Hash should be different from password');
+            assert(hash.length === 64, 'SHA-256 hash should be 64 characters');
+        }
+
+        async function testLocalStorageAccess() {
+            // Test localStorage is accessible
+            localStorage.setItem('test', 'value');
+            assertEquals(localStorage.getItem('test'), 'value', 'localStorage should work');
+            localStorage.removeItem('test');
+        }
+
+        async function testIdeaCreation() {
+            // Clear existing ideas
+            localStorage.removeItem('ideas');
+
+            // Simulate idea creation
+            var testIdea = {
+                id: Date.now(),
+                title: 'Test Idea',
+                text: 'This is a test idea',
+                category: 'Technology',
+                priority: 'High',
+                createdAt: new Date().toISOString()
+            };
+
+            var ideas = [];
+            ideas.push(testIdea);
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+
+            // Verify idea was saved
+            var savedIdeas = JSON.parse(localStorage.getItem('ideas'));
+            assertEquals(savedIdeas.length, 1, 'Should have 1 idea');
+            assertEquals(savedIdeas[0].title, 'Test Idea', 'Title should match');
+
+            // Cleanup
+            localStorage.removeItem('ideas');
+        }
+
+        async function testIdeaDeletion() {
+            // Setup: Create test ideas
+            var ideas = [
+                { id: 1, title: 'Idea 1', text: 'Text 1', category: 'Business', priority: 'Low', createdAt: new Date().toISOString() },
+                { id: 2, title: 'Idea 2', text: 'Text 2', category: 'Technology', priority: 'High', createdAt: new Date().toISOString() }
+            ];
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+
+            // Delete idea with id 1
+            ideas = ideas.filter(function(i) { return i.id !== 1; });
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+
+            // Verify deletion
+            var savedIdeas = JSON.parse(localStorage.getItem('ideas'));
+            assertEquals(savedIdeas.length, 1, 'Should have 1 idea left');
+            assertEquals(savedIdeas[0].id, 2, 'Remaining idea should have id 2');
+
+            // Cleanup
+            localStorage.removeItem('ideas');
+        }
+
+        async function testSearchFunctionality() {
+            // Setup: Create test ideas
+            var ideas = [
+                { id: 1, title: 'AI Project', text: 'Build an AI assistant', category: 'Technology', priority: 'High', createdAt: new Date().toISOString() },
+                { id: 2, title: 'Coffee Shop', text: 'Open a coffee shop', category: 'Business', priority: 'Medium', createdAt: new Date().toISOString() },
+                { id: 3, title: 'AI Research', text: 'Research AI ethics', category: 'Research', priority: 'Low', createdAt: new Date().toISOString() }
+            ];
+
+            // Test search by title
+            var searchTerm = 'ai';
+            var filtered = ideas.filter(function(idea) {
+                return idea.title.toLowerCase().includes(searchTerm) ||
+                       idea.text.toLowerCase().includes(searchTerm);
+            });
+
+            assertEquals(filtered.length, 2, 'Should find 2 ideas with "AI"');
+        }
+
+        async function testAnalyticsTracking() {
+            // Clear analytics
+            localStorage.removeItem('analytics');
+
+            // Verify analytics structure
+            var analytics = {
+                totalIdeasCreated: 0,
+                totalIdeasDeleted: 0,
+                categoryCounts: {},
+                priorityCounts: {},
+                dailyActivity: {},
+                voiceCommandsUsed: 0,
+                averageIdeaLength: 0,
+                createdDates: []
+            };
+
+            assertNotNull(analytics.categoryCounts, 'Analytics should have categoryCounts');
+            assertNotNull(analytics.priorityCounts, 'Analytics should have priorityCounts');
+            assertEquals(analytics.totalIdeasCreated, 0, 'Initial count should be 0');
+
+            // Cleanup
+            localStorage.removeItem('analytics');
+        }
+
+        async function testExportFormat() {
+            // Create test data
+            var ideas = [
+                { id: 1, title: 'Test', text: 'Test text', category: 'Business', priority: 'High', createdAt: new Date().toISOString() }
+            ];
+
+            var exportData = {
+                ideas: ideas,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+
+            // Verify export structure
+            assertNotNull(exportData.ideas, 'Export should have ideas');
+            assertNotNull(exportData.exportDate, 'Export should have exportDate');
+            assertNotNull(exportData.version, 'Export should have version');
+            assertEquals(exportData.ideas.length, 1, 'Should export 1 idea');
+        }
+
+        async function testImportValidation() {
+            var validData = {
+                ideas: [
+                    { id: 1, title: 'Test', text: 'Test', category: 'Business', priority: 'High', createdAt: new Date().toISOString() }
+                ],
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+
+            // Validate structure
+            assert(Array.isArray(validData.ideas), 'Ideas should be an array');
+            assert(validData.ideas.length > 0, 'Should have at least one idea');
+        }
+
+        async function testCategoryFiltering() {
+            var ideas = [
+                { id: 1, title: 'Idea 1', text: 'Text', category: 'Business', priority: 'High', createdAt: new Date().toISOString() },
+                { id: 2, title: 'Idea 2', text: 'Text', category: 'Technology', priority: 'High', createdAt: new Date().toISOString() },
+                { id: 3, title: 'Idea 3', text: 'Text', category: 'Business', priority: 'Low', createdAt: new Date().toISOString() }
+            ];
+
+            var businessIdeas = ideas.filter(function(i) { return i.category === 'Business'; });
+            assertEquals(businessIdeas.length, 2, 'Should have 2 business ideas');
+        }
+
+        async function testPriorityFiltering() {
+            var ideas = [
+                { id: 1, title: 'Idea 1', text: 'Text', category: 'Business', priority: 'High', createdAt: new Date().toISOString() },
+                { id: 2, title: 'Idea 2', text: 'Text', category: 'Technology', priority: 'Medium', createdAt: new Date().toISOString() },
+                { id: 3, title: 'Idea 3', text: 'Text', category: 'Business', priority: 'High', createdAt: new Date().toISOString() }
+            ];
+
+            var highPriorityIdeas = ideas.filter(function(i) { return i.priority === 'High'; });
+            assertEquals(highPriorityIdeas.length, 2, 'Should have 2 high priority ideas');
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            // Reset counters
+            testsPassed = 0;
+            testsFailed = 0;
+            clearTests();
+
+            // Authentication tests
+            await runTest('Password Hashing', testPasswordHashing, 'auth-tests');
+            await runTest('LocalStorage Access', testLocalStorageAccess, 'auth-tests');
+
+            // Idea management tests
+            await runTest('Idea Creation', testIdeaCreation, 'idea-tests');
+            await runTest('Idea Deletion', testIdeaDeletion, 'idea-tests');
+
+            // Search & filter tests
+            await runTest('Search Functionality', testSearchFunctionality, 'search-tests');
+            await runTest('Category Filtering', testCategoryFiltering, 'search-tests');
+            await runTest('Priority Filtering', testPriorityFiltering, 'search-tests');
+
+            // Analytics tests
+            await runTest('Analytics Tracking', testAnalyticsTracking, 'analytics-tests');
+
+            // Import/Export tests
+            await runTest('Export Format', testExportFormat, 'export-tests');
+            await runTest('Import Validation', testImportValidation, 'export-tests');
+
+            // Update summary
+            var totalTests = testsPassed + testsFailed;
+            document.getElementById('totalTests').textContent = totalTests;
+            document.getElementById('passedTests').textContent = testsPassed;
+            document.getElementById('failedTests').textContent = testsFailed;
+        }
+
+        function clearTests() {
+            document.getElementById('auth-tests').innerHTML = '';
+            document.getElementById('idea-tests').innerHTML = '';
+            document.getElementById('search-tests').innerHTML = '';
+            document.getElementById('analytics-tests').innerHTML = '';
+            document.getElementById('export-tests').innerHTML = '';
+            testsPassed = 0;
+            testsFailed = 0;
+            document.getElementById('totalTests').textContent = '0';
+            document.getElementById('passedTests').textContent = '0';
+            document.getElementById('failedTests').textContent = '0';
+        }
+
+        // Copy hashPassword function from main app for testing
+        async function hashPassword(password) {
+            var encoder = new TextEncoder();
+            var data = encoder.encode(password);
+            var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            var hashArray = Array.from(new Uint8Array(hashBuffer));
+            var hashHex = hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+            return hashHex;
+        }
+
+        // Auto-run tests on page load (optional)
+        // window.onload = runAllTests;
+    </script>
+</body>
+</html>

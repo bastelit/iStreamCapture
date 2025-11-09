@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Privacy-first voice-to-idea capture tool for innovators and entrepreneurs. Stream your ideas, capture innovation, fuel your future.">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="iStreamCapture">
+    <link rel="manifest" href="manifest.json">
     <title>iStreamCapture - Voice-to-Idea Innovation Tool</title>
     <style>
         * {
@@ -579,21 +585,84 @@
     <script>
         // Global variables
         var ideas = JSON.parse(localStorage.getItem('ideas') || '[]');
-        
-        // Authentication
-        function authenticate() {
+        var currentEditingId = null;
+        var recognition = null;
+        var isRecording = false;
+
+        // Analytics tracking (local only, privacy-preserving)
+        function getAnalytics() {
+            var analytics = localStorage.getItem('analytics');
+            return analytics ? JSON.parse(analytics) : {
+                totalIdeasCreated: 0,
+                totalIdeasDeleted: 0,
+                categoryCounts: {},
+                priorityCounts: {},
+                dailyActivity: {},
+                voiceCommandsUsed: 0,
+                averageIdeaLength: 0,
+                createdDates: []
+            };
+        }
+
+        function trackEvent(eventType, data) {
+            var analytics = getAnalytics();
+
+            switch(eventType) {
+                case 'idea_saved':
+                    analytics.totalIdeasCreated++;
+                    analytics.categoryCounts[data.category] = (analytics.categoryCounts[data.category] || 0) + 1;
+                    analytics.priorityCounts[data.priority] = (analytics.priorityCounts[data.priority] || 0) + 1;
+                    var today = new Date().toISOString().split('T')[0];
+                    analytics.dailyActivity[today] = (analytics.dailyActivity[today] || 0) + 1;
+                    analytics.createdDates.push(new Date().toISOString());
+                    break;
+                case 'idea_deleted':
+                    analytics.totalIdeasDeleted++;
+                    break;
+                case 'voice_command':
+                    analytics.voiceCommandsUsed++;
+                    break;
+            }
+
+            localStorage.setItem('analytics', JSON.stringify(analytics));
+        }
+
+        // Password hashing using Web Crypto API
+        async function hashPassword(password) {
+            var encoder = new TextEncoder();
+            var data = encoder.encode(password);
+            var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            var hashArray = Array.from(new Uint8Array(hashBuffer));
+            var hashHex = hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+            return hashHex;
+        }
+
+        // Authentication with hashed password
+        async function authenticate() {
             var password = document.getElementById('password').value;
-            var storedPassword = localStorage.getItem('appPassword');
-            
-            if (!storedPassword) {
+            var storedPasswordHash = localStorage.getItem('appPasswordHash');
+
+            // Migration: check if old plain-text password exists
+            var oldPassword = localStorage.getItem('appPassword');
+            if (oldPassword && !storedPasswordHash) {
+                // Migrate to hashed password
+                var hashedOld = await hashPassword(oldPassword);
+                localStorage.setItem('appPasswordHash', hashedOld);
+                localStorage.removeItem('appPassword');
+                storedPasswordHash = hashedOld;
+            }
+
+            if (!storedPasswordHash) {
                 if (password.length < 4) {
                     alert('Password must be at least 4 characters long');
                     return;
                 }
-                localStorage.setItem('appPassword', password);
+                var hashedPassword = await hashPassword(password);
+                localStorage.setItem('appPasswordHash', hashedPassword);
                 showMainApp();
             } else {
-                if (password === storedPassword) {
+                var hashedInput = await hashPassword(password);
+                if (hashedInput === storedPasswordHash) {
                     showMainApp();
                 } else {
                     alert('Incorrect password');
@@ -647,15 +716,16 @@
             
             ideas.unshift(idea);
             localStorage.setItem('ideas', JSON.stringify(ideas));
-            
+
+            // Track analytics
+            trackEvent('idea_saved', { category: category, priority: priority });
+
             clearForm();
             displayIdeas();
             updateDashboard();
-            
-            document.getElementById('status').textContent = '✅ "' + title + '" saved successfully!';
-            setTimeout(function() {
-                document.getElementById('status').textContent = '🎤 Ready to capture your next brilliant idea!';
-            }, 3000);
+
+            showToast('✅ "' + title + '" saved successfully!');
+            document.getElementById('status').textContent = '🎤 Ready to capture your next brilliant idea!';
         }
         
         function clearForm() {
@@ -665,41 +735,277 @@
             document.getElementById('priority').value = 'Medium';
         }
         
-        function displayIdeas() {
+        function displayIdeas(filteredIdeas) {
             var container = document.getElementById('ideasContainer');
-            
-            if (ideas.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No ideas yet</h3><p>Start by recording your first idea above!</p></div>';
+            var displayList = filteredIdeas || ideas;
+
+            if (displayList.length === 0) {
+                if (filteredIdeas && ideas.length > 0) {
+                    container.innerHTML = '<div class="empty-state"><h3>No matching ideas</h3><p>Try a different search term</p></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state"><h3>No ideas yet</h3><p>Start by recording your first idea above!</p></div>';
+                }
                 return;
             }
-            
+
             var html = '';
-            for (var i = 0; i < ideas.length; i++) {
-                var idea = ideas[i];
+            for (var i = 0; i < displayList.length; i++) {
+                var idea = displayList[i];
                 var createdDate = new Date(idea.createdAt).toLocaleDateString();
-                
-                html += '<div style="background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #667eea;">' +
-                    '<div style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #2d3748;">' + idea.title + '</div>' +
+
+                html += '<div style="background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #667eea; position: relative;">' +
+                    '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">' +
+                        '<div style="font-size: 18px; font-weight: 600; color: #2d3748; flex: 1;">' + idea.title + '</div>' +
+                        '<div style="display: flex; gap: 8px; margin-left: 10px;">' +
+                            '<button onclick="editIdea(' + idea.id + ')" style="background: #667eea; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">✏️ Edit</button>' +
+                            '<button onclick="deleteIdea(' + idea.id + ')" style="background: #e53e3e; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">🗑️ Delete</button>' +
+                        '</div>' +
+                    '</div>' +
                     '<div style="margin: 15px 0; line-height: 1.6; color: #4a5568;">' + idea.text + '</div>' +
                     '<div style="font-size: 12px; color: #a0aec0;">Created: ' + createdDate + ' • ' + idea.category + ' • ' + idea.priority + ' Priority</div>' +
                 '</div>';
             }
-            
+
             container.innerHTML = html;
+        }
+
+        function editIdea(ideaId) {
+            var idea = ideas.find(function(i) { return i.id === ideaId; });
+            if (!idea) return;
+
+            // Populate form with idea data
+            document.getElementById('ideaTitle').value = idea.title;
+            document.getElementById('transcription').value = idea.text;
+            document.getElementById('category').value = idea.category;
+            document.getElementById('priority').value = idea.priority;
+
+            // Delete the old idea
+            ideas = ideas.filter(function(i) { return i.id !== ideaId; });
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+
+            // Scroll to recording section
+            document.querySelector('.recording-section').scrollIntoView({ behavior: 'smooth' });
+
+            // Update status
+            document.getElementById('status').textContent = '✏️ Editing: "' + idea.title + '" - Make changes and click Save';
+
+            displayIdeas();
+            updateDashboard();
+        }
+
+        function deleteIdea(ideaId) {
+            var idea = ideas.find(function(i) { return i.id === ideaId; });
+            if (!idea) return;
+
+            if (confirm('Delete "' + idea.title + '"?\n\nThis action cannot be undone.')) {
+                ideas = ideas.filter(function(i) { return i.id !== ideaId; });
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+
+                // Track analytics
+                trackEvent('idea_deleted', {});
+
+                displayIdeas();
+                updateDashboard();
+
+                // Show toast notification
+                showToast('🗑️ Idea deleted successfully');
+            }
+        }
+
+        // Voice command processing
+        function processVoiceCommand(transcript) {
+            var lowerTranscript = transcript.toLowerCase().trim();
+
+            // Save command
+            if (lowerTranscript === 'save' || lowerTranscript === 'save idea') {
+                trackEvent('voice_command', { command: 'save' });
+                saveIdea();
+                return true;
+            }
+
+            // Clear command
+            if (lowerTranscript === 'clear' || lowerTranscript === 'clear form') {
+                trackEvent('voice_command', { command: 'clear' });
+                clearForm();
+                showToast('🎤 Form cleared');
+                return true;
+            }
+
+            // Stop command
+            if (lowerTranscript === 'stop' || lowerTranscript === 'stop recording') {
+                trackEvent('voice_command', { command: 'stop' });
+                if (recognition && isRecording) {
+                    recognition.stop();
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        // Initialize voice recognition
+        function initVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                return null;
+            }
+
+            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onresult = function(event) {
+                var transcript = '';
+                for (var i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        transcript += event.results[i][0].transcript + ' ';
+
+                        // Check for voice commands
+                        var commandProcessed = processVoiceCommand(event.results[i][0].transcript);
+                        if (commandProcessed) {
+                            return;
+                        }
+                    }
+                }
+
+                if (transcript) {
+                    var currentText = document.getElementById('transcription').value;
+                    document.getElementById('transcription').value = currentText + transcript;
+
+                    // Auto-generate title if empty
+                    if (!document.getElementById('ideaTitle').value && transcript.length > 10) {
+                        var words = transcript.trim().split(' ');
+                        var title = words.slice(0, Math.min(5, words.length)).join(' ') + '...';
+                        document.getElementById('ideaTitle').value = title;
+                    }
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                isRecording = false;
+                document.getElementById('recordBtn').classList.remove('recording');
+                document.getElementById('status').textContent = '❌ Error: ' + event.error;
+            };
+
+            recognition.onend = function() {
+                isRecording = false;
+                document.getElementById('recordBtn').classList.remove('recording');
+                document.getElementById('status').textContent = '🎤 Recording stopped. You can edit or save your idea.';
+            };
+
+            return recognition;
+        }
+
+        // Toggle recording
+        function toggleRecording() {
+            if (!recognition) {
+                recognition = initVoiceRecognition();
+                if (!recognition) {
+                    alert('Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+                    return;
+                }
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                isRecording = true;
+                document.getElementById('recordBtn').classList.add('recording');
+                document.getElementById('status').textContent = '🎤 Recording... (Say "save", "clear", or "stop" for voice commands)';
+            }
+        }
+
+        function searchIdeas() {
+            var searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            if (!searchTerm) {
+                displayIdeas();
+                return;
+            }
+
+            var filtered = ideas.filter(function(idea) {
+                return idea.title.toLowerCase().includes(searchTerm) ||
+                       idea.text.toLowerCase().includes(searchTerm) ||
+                       idea.category.toLowerCase().includes(searchTerm) ||
+                       idea.priority.toLowerCase().includes(searchTerm);
+            });
+
+            displayIdeas(filtered);
+        }
+
+        function showToast(message) {
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; font-weight: 500; animation: slideIn 0.3s ease-out;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(function() {
+                if (toast.parentNode) {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.3s ease-out';
+                    setTimeout(function() {
+                        if (toast.parentNode) {
+                            document.body.removeChild(toast);
+                        }
+                    }, 300);
+                }
+            }, 3000);
         }
         
         function updateDashboard() {
             var totalIdeas = ideas.length;
-            var avgMaturity = totalIdeas > 0 ? Math.round(Math.random() * 100) : 0;
-            
-            document.getElementById('statsGrid').innerHTML = 
+            var analytics = getAnalytics();
+
+            // Calculate average idea length
+            var totalLength = 0;
+            for (var i = 0; i < ideas.length; i++) {
+                totalLength += ideas[i].text.length;
+            }
+            var avgLength = totalIdeas > 0 ? Math.round(totalLength / totalIdeas) : 0;
+
+            // Find most used category
+            var topCategory = 'None';
+            var maxCount = 0;
+            for (var cat in analytics.categoryCounts) {
+                if (analytics.categoryCounts[cat] > maxCount) {
+                    maxCount = analytics.categoryCounts[cat];
+                    topCategory = cat;
+                }
+            }
+
+            // Calculate ideas this week
+            var oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            var ideasThisWeek = ideas.filter(function(idea) {
+                return new Date(idea.createdAt) > oneWeekAgo;
+            }).length;
+
+            document.getElementById('statsGrid').innerHTML =
                 '<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
                     '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + totalIdeas + '</div>' +
                     '<div>Total Ideas</div>' +
                 '</div>' +
                 '<div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
-                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + avgMaturity + '%</div>' +
-                    '<div>Avg Maturity</div>' +
+                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + ideasThisWeek + '</div>' +
+                    '<div>This Week</div>' +
+                '</div>' +
+                '<div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
+                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + avgLength + '</div>' +
+                    '<div>Avg Characters</div>' +
+                '</div>' +
+                '<div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
+                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + topCategory + '</div>' +
+                    '<div>Top Category</div>' +
+                '</div>' +
+                '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
+                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + analytics.totalIdeasCreated + '</div>' +
+                    '<div>Total Created</div>' +
+                '</div>' +
+                '<div style="background: linear-gradient(135deg, #fccb90 0%, #d57eeb 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">' +
+                    '<div style="font-size: 2em; font-weight: bold; margin-bottom: 5px;">' + analytics.voiceCommandsUsed + '</div>' +
+                    '<div>Voice Commands</div>' +
                 '</div>';
         }
         
@@ -966,6 +1272,7 @@
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('authButton').addEventListener('click', authenticate);
+            document.getElementById('recordBtn').addEventListener('click', toggleRecording);
             document.getElementById('saveIdeaBtn').addEventListener('click', saveIdea);
             document.getElementById('clearFormBtn').addEventListener('click', clearForm);
             document.getElementById('exportBtn').addEventListener('click', exportData);
@@ -1007,6 +1314,14 @@
                 });
                 dataSafetyInfo.addEventListener('mouseleave', function() {
                     hideTooltip();
+                });
+            }
+
+            // Search functionality
+            var searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    searchIdeas();
                 });
             }
         });
